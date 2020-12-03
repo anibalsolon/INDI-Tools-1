@@ -11,8 +11,7 @@ start_taskid_str = 'echo "Start - TASKID " %(env_arr_idx)s " : " $(date)'
 end_taskid_str = 'echo "End - TASKID " %(env_arr_idx)s " : " $(date)'
 
 # SGE template string
-pbs_template = \
-'''#! %(shell)s
+pbs_template = '''#! %(shell)s
 ## PBS batch file - %(timestamp)s
 #PBS -S %(shell)s
 #PBS -N %(job_name)s
@@ -28,8 +27,7 @@ pbs_template = '\n'.join([pbs_template,
                           start_taskid_str, '%(run_cmd)s', end_taskid_str])
 
 # SGE template string
-sge_template = \
-'''#! %(shell)s
+sge_template = '''#! %(shell)s
 ## SGE batch file - %(timestamp)s
 #$ -S %(shell)s
 #$ -N %(job_name)s
@@ -45,8 +43,7 @@ sge_template = '\n'.join([sge_template,
                           start_taskid_str, '%(run_cmd)s', end_taskid_str])
 
 # SLURM template string
-slurm_template = \
-'''#! %(shell)s
+slurm_template = '''#! %(shell)s
 ## SLURM batch file - %(timestamp)s
 #SBATCH --job-name=%(job_name)s
 #SBATCH --array=1-%(num_tasks)d

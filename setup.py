@@ -25,4 +25,7 @@ setup(name='INDI-Tools',
       ],
       url='https://github.com/FCP-INDI/INDI-Tools',
       packages=find_packages(exclude=['test*']),
-      install_requires=['botocore', 'boto3'])
+      install_requires=[
+          'botocore',
+          'boto3',
+          'importlib-metadata ~= 1.0 ; python_version < "3.8"'])

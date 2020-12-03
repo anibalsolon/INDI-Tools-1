@@ -3,14 +3,15 @@
 # Contibuting authors (please append):
 # Daniel Clark
 # Cameron Craddock
-
+# Jon Clucas
 '''
 The awsutils package contains various utilities developed for
 interaction with the AWS cloud
 '''
+try:
+    from importlib import metadata
+except ImportError:
+    # Running on pre-3.8 Python; use importlib-metadata package
+    import importlib_metadata as metadata
 
-# Import Python modules
-# import aws_utils
-# import fetch_creds
-
-__version__ = "1.cc"
+__version__ = metadata.version('INDI-tools')

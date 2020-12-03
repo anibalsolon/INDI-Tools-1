@@ -14,8 +14,8 @@ def return_aws_keys(creds_path):
     Parameters
     ----------
     :type creds_path : str
-    :param creds_path : (filepath) path to the csv file downloaded from AWS; can either be root
-        or user credentials
+    :param creds_path : (filepath) path to the csv file downloaded
+        from AWS; can either be root or user credentials
 
     Returns
     -------
@@ -46,7 +46,8 @@ def return_aws_keys(creds_path):
 
     # Strip any carriage return/line feeds
     aws_access_key_id = aws_access_key_id.replace('\r', '').replace('\n', '')
-    aws_secret_access_key = aws_secret_access_key.replace('\r', '').replace('\n', '')
+    aws_secret_access_key = aws_secret_access_key.replace(
+        '\r', '').replace('\n', '')
 
     # Return keys
     return aws_access_key_id, aws_secret_access_key
@@ -61,11 +62,14 @@ def return_bucket(creds_path, bucket_name):
     Parameters
     ----------
     :type creds_path: str
-    :param creds_path : (filepath) path to the csv file with 'Access Key Id' as the header and the
-        corresponding ASCII text for the key underneath; same with the 'Secret Access Key' string and ASCII text
+    :param creds_path : (filepath) path to the csv file with
+        'Access Key Id' as the header and the corresponding ASCII text
+        for the key underneath; same with the 'Secret Access Key'
+        string and ASCII text
 
     :type bucket_name: str
-    :param bucket_name: string corresponding to the name of the bucket on S3
+    :param bucket_name: string corresponding to the name of the bucket
+       on S3
 
     Returns
     -------
@@ -77,7 +81,6 @@ def return_bucket(creds_path, bucket_name):
     # Import packages
     try:
         import boto3
-        import botocore
         from botocore import handlers as botocore_handlers
         from botocore import exceptions as botocore_exceptions
     except ImportError:
@@ -91,15 +94,19 @@ def return_bucket(creds_path, bucket_name):
             aws_access_key_id, aws_secret_access_key = \
                 return_aws_keys(creds_path)
         except Exception as exc:
-            print('There was a problem extracting the AWS credentials from the credentials file provided: {0}'.format(
-                creds_path, exc))
+            print(
+                'There was a problem extracting the AWS credentials from the '
+                ' credentials file provided: {0}'.format(creds_path, exc))
             raise
         # Init connection
-        print('Connecting to S3 bucket: {0} with credentials from {1} ...'.format(bucket_name, creds_path))
+        print(
+            'Connecting to S3 bucket: {0} with credentials from'
+            ' {1} ...'.format(bucket_name, creds_path))
         # Better when being used in multi-threading, see:
         # http://boto3.readthedocs.org/en/latest/guide/resources.html#multithreading
-        session = boto3.session.Session(aws_access_key_id=aws_access_key_id,
-                                        aws_secret_access_key=aws_secret_access_key)
+        session = boto3.session.Session(
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key)
         s3_resource = session.resource('s3', use_ssl=True)
 
     # Otherwise, connect anonymously
@@ -107,8 +114,8 @@ def return_bucket(creds_path, bucket_name):
         print('Connecting to AWS: {0} anonymously...'.format(bucket_name))
         session = boto3.session.Session()
         s3_resource = session.resource('s3', use_ssl=True)
-        s3_resource.meta.client.meta.events.register('choose-signer.s3.*',
-                                                     botocore_handlers.disable_signing)
+        s3_resource.meta.client.meta.events.register(
+            'choose-signer.s3.*', botocore_handlers.disable_signing)
 
     # Explicitly declare a secure SSL connection for bucket object
     bucket = s3_resource.Bucket(bucket_name)
@@ -119,10 +126,14 @@ def return_bucket(creds_path, bucket_name):
     except botocore_exceptions.ClientError as exc:
         error_code = int(exc.response['Error']['Code'])
         if error_code == 403:
-            print('Access to bucket: {0} is denied; check credentials'.format(bucket_name))
+            print(
+                'Access to bucket: {0} is denied; check '
+                'credentials'.format(bucket_name))
             raise
         elif error_code == 404:
-            print('Bucket: {0} does not exist; check spelling and try again'.format(bucket_name))
+            print(
+                'Bucket: {0} does not exist; check spelling and try '
+                'again'.format(bucket_name))
             raise
         else:
             print('Unable to connect to bucket: {0}'.format(bucket_name, exc))
