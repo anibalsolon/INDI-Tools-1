@@ -41,7 +41,8 @@ class ProgressPercentage(object):
     def __call__(self, bytes_amount):
         """
         Call to print the current percentage complete of transfer
-        :param bytes_amount: amount recently received, will be added to running totals in class private variable
+        :param bytes_amount: amount recently received, will be added
+            to running totals in class private variable
         :return: writes to stdout
         """
         # With the lock on, print upload status
@@ -51,7 +52,8 @@ class ProgressPercentage(object):
                 percentage = (self._seen_so_far / self._size) * 100
             else:
                 percentage = 0
-            progress_str = '{0} / {1} ({2:.2f}%)\r'.format(self._seen_so_far, self._size, percentage)
+            progress_str = '{0} / {1} ({2:.2f}%)\r'.format(
+                self._seen_so_far, self._size, percentage)
 
             # Write to stdout
             sys.stdout.write(progress_str)
@@ -145,9 +147,10 @@ def s3_rename(bucket, src_dst_tuple, keep_old=False, make_public=False):
     # Init variables
     num_files = len(src_list)
 
-    # Check if the list lengths match 
+    # Check if the list lengths match
     if num_files != len(dst_list):
-        msg = "src_list {0} and dst_list {0} must be the same length".format(src_list, dst_list)
+        msg = "src_list {0} and dst_list {0} must be the same length".format(
+            src_list, dst_list)
         raise RuntimeError(msg)
 
     # And iterate over keys to copy over new ones
@@ -167,11 +170,14 @@ def s3_rename(bucket, src_dst_tuple, keep_old=False, make_public=False):
             print('Destination key {0} exists, skipping ...'.format(dst_key))
             continue
         except ClientError:
-            print('copying source: {0} to destination {1}'.format(str(src_f), dst_key))
+            print('copying source: {0} to destination {1}'.format(
+                str(src_f), dst_key))
 
             if make_public:
                 print('making public...')
-                dst_obj.copy_from(CopySource=bucket.name + '/' + str(src_f), ACL='public-read')
+                dst_obj.copy_from(
+                    CopySource=bucket.name + '/' + str(src_f),
+                    ACL='public-read')
             else:
                 dst_obj.copy_from(CopySource=bucket.name + '/' + str(src_f))
             if not keep_old:
@@ -179,7 +185,8 @@ def s3_rename(bucket, src_dst_tuple, keep_old=False, make_public=False):
 
         # Print status
         per = 100*(float(idx+1)/num_files)
-        print('Done renaming {0}/{1}\n{2:.3f}% complete'.format(idx+1, num_files, per))
+        print('Done renaming {0}/{1}\n{2:.3f}% complete'.format(
+            idx+1, num_files, per))
 
     # Done iterating through list
     return None
@@ -213,13 +220,16 @@ def s3_delete(bucket, bucket_keys):
     # Iterate over list and delete S3 items
     for idx, bkey in enumerate(bucket_keys):
         try:
-            print('attempting to delete {0} from {1}...'.format(bkey, bucket.name))
+            print('attempting to delete {0} from {1}...'.format(
+                bkey, bucket.name))
             bobj = bucket.Object(bkey)
             bobj.delete()
             per = 100*(float(idx+1)/num_files)
-            print('Done deleting {0}/{1}\n{2:f}% complete'.format(idx+1, num_files, per))
+            print('Done deleting {0}/{1}\n{2:f}% complete'.format(
+                idx+1, num_files, per))
         except Exception as exc:
-            print('Unable to delete bucket key {0}. Error: {1}'.format(bkey, exc))
+            print('Unable to delete bucket key {0}. Error: {1}'.format(
+                bkey, exc))
 
     # Done iterating through list
     return None
@@ -263,7 +273,8 @@ def s3_download(bucket, s3_local_tuple):
             # If it exists, compare md5sums
             bobj.get()
         except ClientError as exc:
-            print("{0} does not exist in S3 bucket! {1}, Skipping ...".format(bkey, exc))
+            print("{0} does not exist in S3 bucket! {1}, Skipping ...".format(
+                bkey, exc))
             continue
 
         s3_md5 = bobj.e_tag.strip('"')
@@ -290,7 +301,9 @@ def s3_download(bucket, s3_local_tuple):
                     bucket.download_file(bkey, local_path,
                                          Callback=ProgressPercentage(bobj))
                 except Exception as exc:
-                    print('Could not download file {0} because of: {1}, skipping..'.format(bkey, exc))
+                    print(
+                        'Could not download file {0} because of: {1}, '
+                        'skipping..'.format(bkey, exc))
         else:
             print('Downloading {0} to {1}'.format(bkey, local_path))
             bucket.download_file(bkey, local_path,
@@ -298,7 +311,8 @@ def s3_download(bucket, s3_local_tuple):
 
         # Print status
         per = 100*(float(idx+1)/num_files)
-        print("finished file {0}/{1}\n{2:f}% complete\n".format(idx+1, num_files, per))
+        print("finished file {0}/{1}\n{2:f}% complete\n".format(
+            idx+1, num_files, per))
 
     # Done iterating through list
     return None
@@ -347,7 +361,7 @@ def s3_upload(bucket, local_s3_tuple, make_public=False, encrypt=False):
     if encrypt:
         extra_args['ServerSideEncryption'] = 'AES256'
 
-    # Check if the list lengths match 
+    # Check if the list lengths match
     if num_files != len(s3_list):
         raise RuntimeError("local_list and s3_list must be the same length!")
 
@@ -365,7 +379,8 @@ def s3_upload(bucket, local_s3_tuple, make_public=False, encrypt=False):
             dst_file = dst_file.replace(s3_str+bucket_name, '').lstrip('/')
 
         # Print status
-        print('Uploading {0} to S3 bucket {1} as {2}'.format(src_file, bucket.name, dst_file))
+        print('Uploading {0} to S3 bucket {1} as {2}'.format(
+            src_file, bucket.name, dst_file))
 
         # Create a new key from the bucket and set its contents
         dst_key = bucket.Object(key=dst_file)
@@ -386,7 +401,8 @@ def s3_upload(bucket, local_s3_tuple, make_public=False, encrypt=False):
                                Callback=ProgressPercentage(src_file))
 
         per = 100*(float(idx+1)/num_files)
-        print("finished file {0}/{1}\n\n{2:f}% complete\n".format(idx+1, num_files, per))
+        print("finished file {0}/{1}\n\n{2:f}% complete\n".format(
+            idx+1, num_files, per))
 
     # Print when finished
     return None
@@ -443,7 +459,8 @@ def test_bucket_access(creds_path, output_directory):
     f.close()
 
     # Formulate test ouput key in bucket path output directory
-    rel_key_path = output_directory.replace(os.path.join(s3_str, bucket_name), '').lstrip('/')
+    rel_key_path = output_directory.replace(
+        os.path.join(s3_str, bucket_name), '').lstrip('/')
     write_test_key = os.path.join(rel_key_path, os.path.basename(test_file))
 
     # Attempt a write to bucket
