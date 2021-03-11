@@ -53,12 +53,10 @@ def return_aws_keys(creds_path):
     return aws_access_key_id, aws_secret_access_key
 
 
-# Function to return an AWS S3 bucket
 def return_bucket(creds_path, bucket_name):
     """
     Method to a return a bucket object which can be used to interact
     with an AWS S3 bucket using credentials found in a local file.
-
     Parameters
     ----------
     :type creds_path: str
@@ -66,11 +64,9 @@ def return_bucket(creds_path, bucket_name):
         'Access Key Id' as the header and the corresponding ASCII text
         for the key underneath; same with the 'Secret Access Key'
         string and ASCII text
-
     :type bucket_name: str
     :param bucket_name: string corresponding to the name of the bucket
        on S3
-
     Returns
     -------
     bucket : boto.s3.bucket.Bucket
@@ -78,7 +74,6 @@ def return_bucket(creds_path, bucket_name):
         in an S3 bucket on AWS
     """
 
-    # Import packages
     try:
         import boto3
         from botocore import handlers as botocore_handlers
@@ -98,7 +93,7 @@ def return_bucket(creds_path, bucket_name):
                 'There was a problem extracting the AWS credentials from the '
                 ' credentials file provided: {0}'.format(creds_path, exc))
             raise
-        # Init connection
+
         print(
             'Connecting to S3 bucket: {0} with credentials from'
             ' {1} ...'.format(bucket_name, creds_path))
@@ -109,34 +104,34 @@ def return_bucket(creds_path, bucket_name):
             aws_secret_access_key=aws_secret_access_key)
         s3_resource = session.resource('s3', use_ssl=True)
 
-    # Otherwise, connect anonymously
+    # Otherwise, try to connect via policy
     else:
-        print('Connecting to AWS: {0} anonymously...'.format(bucket_name))
+        print('Connecting to AWS: {0}...'.format(bucket_name))
         session = boto3.session.Session()
         s3_resource = session.resource('s3', use_ssl=True)
-        s3_resource.meta.client.meta.events.register(
-            'choose-signer.s3.*', botocore_handlers.disable_signing)
 
-    # Explicitly declare a secure SSL connection for bucket object
     bucket = s3_resource.Bucket(bucket_name)
 
-    # And try fetch the bucket with the name argument
-    try:
-        s3_resource.meta.client.head_bucket(Bucket=bucket_name)
-    except botocore_exceptions.ClientError as exc:
-        error_code = int(exc.response['Error']['Code'])
-        if error_code == 403:
-            print(
-                'Access to bucket: {0} is denied; check '
-                'credentials'.format(bucket_name))
-            raise
-        elif error_code == 404:
-            print(
-                'Bucket: {0} does not exist; check spelling and try '
-                'again'.format(bucket_name))
-            raise
-        else:
-            print('Unable to connect to bucket: {0}'.format(bucket_name, exc))
+    def tryout():
+        try:
+            s3_resource.meta.client.head_bucket(Bucket=bucket_name)
+        except botocore_exceptions.ClientError as exc:
+            error_code = int(exc.response['Error']['Code'])
+            if error_code == 403:
+                raise
+            elif error_code == 404:
+                print(
+                    'Bucket: {0} does not exist; check spelling and try '
+                    'again'.format(bucket_name))
+                raise
+            else:
+                print('Unable to connect to bucket: {0}'.format(bucket_name, exc))
 
-    # Return the bucket
+    try:
+        tryout()
+    except:
+        s3_resource.meta.client.meta.events.register(
+            'choose-signer.s3.*', botocore_handlers.disable_signing)
+        tryout()
+
     return bucket
