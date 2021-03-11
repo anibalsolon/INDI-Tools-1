@@ -130,6 +130,7 @@ def return_bucket(creds_path, bucket_name):
     try:
         tryout()
     except:
+        print('Connecting to AWS anonymously: {0}...'.format(bucket_name))
         s3_resource.meta.client.meta.events.register(
             'choose-signer.s3.*', botocore_handlers.disable_signing)
         tryout()
